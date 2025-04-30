@@ -103,9 +103,10 @@ if st.session_state.get("data_loaded", False):
         utils.plot_predictions(Y_test, Y_pred, scaler)
         utils.show_metrics(Y_test, Y_pred, scaler)
 
+        st.subheader("Forecast Future Prices")
         future_forecast = model.forecast_future(lstm_model, scaled_data, predict_days, time_step)
         utils.plot_forecast(future_forecast, scaler)
-        utils.download_forecast(future_forecast, ticker, scaler)
+        # utils.download_forecast(future_forecast, ticker, scaler)
 
 else:
     st.warning("Please load the historical data first by clicking the 'Load Historical Data' button.")
