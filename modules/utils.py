@@ -40,10 +40,21 @@ def show_metrics(Y_true, Y_pred, scaler):
 
 def plot_forecast(future_forecast, scaler):
     forecast_inv = scaler.inverse_transform(future_forecast)
+    # Find max and min prices
+    max_price = forecast_inv.max()
+    min_price = forecast_inv.min()
     plt.figure(figsize=(12, 6))
-    plt.plot(forecast_inv, marker='o')
+    plt.plot(forecast_inv, marker='o', label='Forecast')
+    # Add dashed lines for max and min
+    plt.axhline(y=max_price, color='green', linestyle='--', label=f'Max: {max_price:.2f}')
+    plt.axhline(y=min_price, color='red', linestyle='--', label=f'Min: {min_price:.2f}')
+    plt.xlabel('Days Ahead')
+    plt.ylabel('Price')
+    plt.xticks(np.arange(0, len(forecast_inv), step=5))
     plt.title("Future Price Forecast")
+    plt.legend()
     st.pyplot(plt.gcf())
+
 
 def download_forecast(forecast, ticker, scaler):
     # Inverse scale
