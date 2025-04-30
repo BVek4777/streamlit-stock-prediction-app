@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from modules import data_loader, preprocess, utils, model
 import time
-
+from tensorflow.keras.models import load_model
 # Load ticker CSV
 @st.cache_data
 def load_ticker_csv():
