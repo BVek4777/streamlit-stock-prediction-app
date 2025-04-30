@@ -104,17 +104,19 @@ if st.session_state.get("data_loaded", False):
         utils.show_metrics(Y_test, Y_pred, scaler)
 
         st.subheader("Forecast Future Prices")
-        future_forecast = model.forecast_future(lstm_model, scaled_data, predict_days, time_step)
-        utils.plot_forecast(future_forecast, scaler)
-        # st.write(future_forecast.shape
-        future_forecast_actual= scaler.inverse_transform(future_forecast)
-        day=range(1, predict_days+1)
-        future_forecast_df=pd.DataFrame({"Days": day,
-                                         "Forecasted Price": future_forecast_actual.flatten()
-                                         })
-        future_forecast_df = future_forecast_df.reset_index(drop=True)
+        with st.spinner('Generating future forecast and plot...'):
+            future_forecast = model.forecast_future(lstm_model, scaled_data, predict_days, time_step)
+            utils.plot_forecast(future_forecast, scaler)
 
-        st.write(future_forecast_df)
+            future_forecast_actual = scaler.inverse_transform(future_forecast)
+            day = range(1, predict_days + 1)
+            future_forecast_df = pd.DataFrame({
+                "Days": day,
+                "Forecasted Price": future_forecast_actual.flatten()
+            })
+            future_forecast_df = future_forecast_df.reset_index(drop=True)
+
+            st.write(future_forecast_df)
         # utils.download_forecast(future_forecast, ticker, scaler)
 
 else:
