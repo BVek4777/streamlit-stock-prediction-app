@@ -40,7 +40,7 @@ def show_metrics(Y_true, Y_pred, scaler):
 
 def plot_forecast(future_forecast, scaler):
     forecast_inv = scaler.inverse_transform(future_forecast)
-    plt.figure(figsize=(8, 4))
+    plt.figure(figsize=(12, 6))
     plt.plot(forecast_inv, marker='o')
     plt.title("Future Price Forecast")
     st.pyplot(plt.gcf())

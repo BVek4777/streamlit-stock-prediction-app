@@ -19,7 +19,7 @@ def train_model(model,X_train,Y_train):
     #Callbacks
     early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', patience=5, factor=0.5, verbose=1)
-    history = model.fit(X_train, Y_train, epochs=20, batch_size=32,validation_split=0.1, callbacks=[early_stop, reduce_lr])
+    history = model.fit(X_train, Y_train, epochs=100, batch_size=32,validation_split=0.1, callbacks=[early_stop, reduce_lr])
     return history
 
 def predict(model, X_test):

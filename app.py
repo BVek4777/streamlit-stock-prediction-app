@@ -20,10 +20,10 @@ Company_Name = selected.split("-")[1]
 
 # --- Settings ---
 st.header("1. Set Date Range and Model Parameters")
-start_date = st.date_input("Start Date", value=pd.to_datetime("2025-04-01"))
+start_date = st.date_input("Start Date", value=pd.to_datetime("2024-04-30"))
 end_date = st.date_input("End Date", value=pd.to_datetime("today"))
 time_step = st.slider("Select Time Step (for LSTM sequence)", 10, 100, 60)
-predict_days = st.slider("Days to Predict Ahead", 1, 30, 7)
+predict_days = st.slider("Days to Predict Ahead", 1, 60, 60)
 
 if st.button("Load Historical Data"):
     with st.spinner('Loading historical data...'):
@@ -84,9 +84,11 @@ if st.session_state.get("data_loaded", False):
         with st.spinner('Training the model...'):
             time.sleep(1)
             X, Y = preprocess.create_sequences(scaled_data, time_step)
+            
             X_train, X_test, Y_train, Y_test = preprocess.split_data(X, Y)
             history = model.train_model(lstm_model, X_train, Y_train)
         st.success("Model trained successfully!")
+        
 
         with st.spinner('Making predictions...'):
             time.sleep(1)
@@ -98,6 +100,7 @@ if st.session_state.get("data_loaded", False):
         utils.show_metrics(Y_test, Y_pred, scaler)
 
         future_forecast = model.forecast_future(lstm_model, scaled_data, predict_days, time_step)
+        # st.write(future_forecast)
         utils.plot_forecast(future_forecast, scaler)
         utils.download_forecast(future_forecast, ticker, scaler)
 
