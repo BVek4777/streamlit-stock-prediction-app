@@ -3,7 +3,7 @@ import streamlit as st
 from modules import data_loader, preprocess, utils, model
 import time
 
-# Load ticker CSV (can be from local or web source)
+# Load ticker CSV
 @st.cache_data
 def load_ticker_csv():
     url = "https://raw.githubusercontent.com/datasets/nasdaq-listings/master/data/nasdaq-listed-symbols.csv"
@@ -13,73 +13,87 @@ def load_ticker_csv():
     return df
 
 ticker_df = load_ticker_csv()
-# Build dropdown options
 options = ticker_df.apply(lambda row: f"{row['Symbol']}-{row['Company Name']}", axis=1).tolist()
-# Display dropdown in Streamlit app
 selected = st.selectbox("Search for a Stock", options, index=1859)
-# Extract the symbol
 ticker = selected.split("-")[0]
 Company_Name = selected.split("-")[1]
 
 # --- Settings ---
 st.header("1. Set Date Range and Model Parameters")
-start_date = st.date_input("Start Date", value=pd.to_datetime("2020-01-01"))
+start_date = st.date_input("Start Date", value=pd.to_datetime("2025-04-01"))
 end_date = st.date_input("End Date", value=pd.to_datetime("today"))
 time_step = st.slider("Select Time Step (for LSTM sequence)", 10, 100, 60)
 predict_days = st.slider("Days to Predict Ahead", 1, 30, 7)
 
 if st.button("Load Historical Data"):
     with st.spinner('Loading historical data...'):
-        time.sleep(1)  # Add a 1-second delay
+        time.sleep(1)
         df, data = data_loader.load_data(ticker, start_date, end_date)
         st.session_state.df = df
         st.session_state.data = data
         st.session_state.data_loaded = True
+        st.session_state.loaded_start_date = start_date
+        st.session_state.loaded_end_date = end_date
     st.success(f"Data loaded for {ticker} from {start_date} to {end_date}")
 
 # --- Show Data if Loaded ---
 if st.session_state.get("data_loaded", False):
+
+    # Warn user if they change date range after loading data
+    if (start_date != st.session_state.get("loaded_start_date") or
+        end_date != st.session_state.get("loaded_end_date")):
+        st.toast(" You've changed the date range. Click 'Load Historical Data' again to update the dataset.", icon="⚠️")
+    #show the data in descending order of date
     st.write(st.session_state.df.sort_values(by='Date', ascending=False))
+
+    #plotting the closing price of the stock from start_date to end_date
     utils.plot_data(st.session_state.data, ticker)
 
-    # --- Predict Future Prices ---
+    #Predict Future Prices 
     st.header("2. Predict Future Prices")
     if st.button("Predict using LSTM"):
-        # Show loading animation for model building
+
+        data = st.session_state.get("data", None)
+
+        if data is None:
+            st.error("Data not found in session state. Please load data again.")
+            st.stop()
+
+        clean_df = preprocess.clean_data(data)
+        scaled_data, scaler = preprocess.scale_data(clean_df)
+
+        with st.spinner(f'Checking number of data points for time step ({time_step} days)...'):
+            time.sleep(1)
+            not_enough_data = len(scaled_data) <= time_step
+
+        if not_enough_data:
+            st.error(f"Not enough data for the selected time step ({time_step} days). Please lower the time step or select a longer date range.")
+            st.stop()
+
+        # Proceed with model building
         with st.spinner('Building LSTM Model...'):
             time.sleep(1)
             lstm_model = model.build_model(time_step)
         st.success("Model built successfully!")
 
-        # Show loading animation for model compilation
         with st.spinner('Compiling the Model...'):
             time.sleep(1)
             lstm_model.compile(optimizer='adam', loss='mean_squared_error')
         st.success("Model compiled successfully!")
 
-        # Show loading animation for model training
         with st.spinner('Training the model...'):
             time.sleep(1)
-            clean_df = preprocess.clean_data(st.session_state.data)
-            scaled_data, scaler = preprocess.scale_data(clean_df)
-
-            # ✅ ADDITION: Check if enough data for selected time_step
-            if len(scaled_data) <= time_step:
-                st.error("Not enough data for the selected time step. Please lower the time step or select a longer date range.")
-                st.stop()
-
             X, Y = preprocess.create_sequences(scaled_data, time_step)
             X_train, X_test, Y_train, Y_test = preprocess.split_data(X, Y)
             history = model.train_model(lstm_model, X_train, Y_train)
         st.success("Model trained successfully!")
 
-        # Show loading animation for predictions
         with st.spinner('Making predictions...'):
             time.sleep(1)
             Y_pred = model.predict(lstm_model, X_test)
-        st.success("Model Predicted successfully!")
+        st.success("Model predicted successfully!")
 
-        st.subheader("Predictions vs Actual Prices")
+        st.subheader("Predictions vs Actual Prices on Test data")
         utils.plot_predictions(Y_test, Y_pred, scaler)
         utils.show_metrics(Y_test, Y_pred, scaler)
 
