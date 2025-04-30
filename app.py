@@ -3,6 +3,7 @@ import streamlit as st
 from modules import data_loader, preprocess, utils, model
 import time
 from tensorflow.keras.models import load_model
+
 # Load ticker CSV
 @st.cache_data
 def load_ticker_csv():
@@ -34,27 +35,32 @@ if st.button("Load Historical Data"):
         st.session_state.data_loaded = True
         st.session_state.loaded_start_date = start_date
         st.session_state.loaded_end_date = end_date
+        st.session_state.loaded_ticker = ticker
     st.success(f"Data loaded for {ticker} from {start_date} to {end_date}")
 
 # --- Show Data if Loaded ---
 if st.session_state.get("data_loaded", False):
 
-    # Warn user if they change date range after loading data
-    if (start_date != st.session_state.get("loaded_start_date") or
-        end_date != st.session_state.get("loaded_end_date")):
-        st.toast(" You've changed the date range. Click 'Load Historical Data' again to update the dataset.", icon="⚠️")
-    #show the data in descending order of date
+    # Check if ticker or date has changed
+    ticker_changed = ticker != st.session_state.get("loaded_ticker")
+    date_changed = (start_date != st.session_state.get("loaded_start_date") or
+                    end_date != st.session_state.get("loaded_end_date"))
+
+    # Show a single toast if either ticker or date changed
+    if ticker_changed or date_changed:
+        st.toast("You've changed either stock or dates range. Click 'Load Historical Data' again to update the dataset.", icon="⚠️")
+
+    # Show the data in descending order of date
     st.write(st.session_state.df.sort_values(by='Date', ascending=False))
 
-    #plotting the closing price of the stock from start_date to end_date
+    # Plotting the closing price of the stock
     utils.plot_data(st.session_state.data, ticker)
 
-    #Predict Future Prices 
+    # Predict Future Prices
     st.header("2. Predict Future Prices")
     if st.button("Predict using LSTM"):
 
         data = st.session_state.get("data", None)
-
         if data is None:
             st.error("Data not found in session state. Please load data again.")
             st.stop()
@@ -70,7 +76,7 @@ if st.session_state.get("data_loaded", False):
             st.error(f"Not enough data for the selected time step ({time_step} days). Please lower the time step or select a longer date range.")
             st.stop()
 
-        # Proceed with model building
+        # Model building
         with st.spinner('Building LSTM Model...'):
             time.sleep(1)
             lstm_model = model.build_model(time_step)
@@ -84,11 +90,9 @@ if st.session_state.get("data_loaded", False):
         with st.spinner('Training the model...'):
             time.sleep(1)
             X, Y = preprocess.create_sequences(scaled_data, time_step)
-            
             X_train, X_test, Y_train, Y_test = preprocess.split_data(X, Y)
             history = model.train_model(lstm_model, X_train, Y_train)
         st.success("Model trained successfully!")
-        
 
         with st.spinner('Making predictions...'):
             time.sleep(1)
@@ -100,7 +104,6 @@ if st.session_state.get("data_loaded", False):
         utils.show_metrics(Y_test, Y_pred, scaler)
 
         future_forecast = model.forecast_future(lstm_model, scaled_data, predict_days, time_step)
-        # st.write(future_forecast)
         utils.plot_forecast(future_forecast, scaler)
         utils.download_forecast(future_forecast, ticker, scaler)
 
