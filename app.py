@@ -101,7 +101,10 @@ if st.session_state.get("data_loaded", False):
 
         st.subheader("Predictions vs Actual Prices on Test data")
         utils.plot_predictions(Y_test, Y_pred, scaler)
+        utils.train_valid_loss(history.history)
         utils.show_metrics(Y_test, Y_pred, scaler)
+        
+
 
         st.subheader("Forecast Future Prices")
         with st.spinner('Generating future forecast and plot...'):

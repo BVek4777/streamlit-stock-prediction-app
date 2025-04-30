@@ -29,6 +29,18 @@ def plot_predictions(Y_true, Y_pred, scaler):
     plt.title("Actual vs. Predicted Prices")
     st.pyplot(plt.gcf())
 
+def train_valid_loss(history):
+    st.subheader("Training and Validation Loss")
+    # Assuming `history` is a dictionary containing loss values
+    plt.figure(figsize=(10, 5))
+    plt.plot(history['loss'], label='Training Loss')
+    plt.plot(history['val_loss'], label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.legend()
+    st.pyplot(plt.gcf())  # Display the plot in Streamlit app
+
 def show_metrics(Y_true, Y_pred, scaler):
     Y_true_inv = scaler.inverse_transform(Y_true)
     Y_pred_inv = scaler.inverse_transform(Y_pred)
