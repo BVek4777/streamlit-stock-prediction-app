@@ -13,6 +13,8 @@ def load_ticker_csv():
     df.dropna(inplace=True)
     return df
 
+st.set_page_config(page_title="Streamlit-Stock-Predictions", layout="wide")
+st.title("📈 Stock Price Predictions Web App")
 ticker_df = load_ticker_csv()
 options = ticker_df.apply(lambda row: f"{row['Symbol']}-{row['Company Name']}", axis=1).tolist()
 selected = st.selectbox("Search for a Stock", options, index=1861)
