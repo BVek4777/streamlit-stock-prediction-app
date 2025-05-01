@@ -111,7 +111,7 @@ if st.session_state.get("data_loaded", False):
             future_forecast = model.forecast_future(lstm_model, scaled_data, predict_days, time_step)
             utils.plot_forecast(future_forecast, scaler)
 
-            future_forecast_actual = scaler.inverse_transform(future_forecast)
+            future_forecast_actual = scaler.inverse_transform(future_forecast.reshape(-1, 1))
             day = range(1, predict_days + 1)
             future_forecast_df = pd.DataFrame({
                 "Days": day,

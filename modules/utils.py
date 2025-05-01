@@ -51,7 +51,7 @@ def show_metrics(Y_true, Y_pred, scaler):
 
 
 def plot_forecast(future_forecast, scaler):
-    forecast_inv = scaler.inverse_transform(future_forecast)
+    forecast_inv = scaler.inverse_transform(future_forecast.reshape(-1, 1))
     # Find max and min prices
     max_price = forecast_inv.max()
     min_price = forecast_inv.min()

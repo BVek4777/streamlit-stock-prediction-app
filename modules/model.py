@@ -25,14 +25,18 @@ def train_model(model,X_train,Y_train):
 def predict(model, X_test):
     return model.predict(X_test)
 
-
 def forecast_future(model, scaled_data, predict_days, time_step):
     input_seq = scaled_data[-time_step:]
     forecast = []
 
     for _ in range(predict_days):
-        pred = model.predict(input_seq.reshape(1, time_step, 1))
-        forecast.append(pred[0][0])
-        input_seq = np.append(input_seq[1:], pred).reshape(time_step, 1)
+        # pred = model.predict(input_seq.reshape(1, time_step, 1))
+        pred = model.predict(input_seq[np.newaxis, :, :], verbose=0)[0, 0] 
+        # forecast.append(pred[0][0])
+        forecast.append(pred)
 
-    return np.array(forecast).reshape(-1, 1)
+        input_seq = np.append(input_seq[1:], [[pred]],axis=0)  # slide window
+    
+
+    return np.array(forecast)
+
