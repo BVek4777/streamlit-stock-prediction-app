@@ -15,16 +15,16 @@ def load_ticker_csv():
 
 ticker_df = load_ticker_csv()
 options = ticker_df.apply(lambda row: f"{row['Symbol']}-{row['Company Name']}", axis=1).tolist()
-selected = st.selectbox("Search for a Stock", options, index=1859)
+selected = st.selectbox("Search for a Stock", options, index=1861)
 ticker = selected.split("-")[0]
 Company_Name = selected.split("-")[1]
 
 # --- Settings ---
 st.header("1. Set Date Range and Model Parameters")
-start_date = st.date_input("Start Date", value=pd.to_datetime("2024-04-30"))
+start_date = st.date_input("Start Date", value=pd.to_datetime("2015-01-01"))
 end_date = st.date_input("End Date", value=pd.to_datetime("today"))
 time_step = st.slider("Select Time Step (for LSTM sequence)", 10, 100, 60)
-predict_days = st.slider("Days to Predict Ahead", 1, 60, 60)
+predict_days = st.slider("Days to Predict Ahead", 1, 60, 30)
 
 if st.button("Load Historical Data"):
     with st.spinner('Loading historical data...'):
